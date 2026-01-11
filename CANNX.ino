@@ -36,6 +36,8 @@ const byte SWITCH0 = 8;             // VLCB push button switch pin
 // module name, must be at most 7 characters.
 char mname[] = "NX";
 
+const int NumEVs = 20;
+
 VLCB::CAN2515 can2515;                  // CAN transport object
 
 // Service objects
@@ -44,10 +46,12 @@ VLCB::SerialUserInterface serialUserInterface;
 VLCB::MinimumNodeServiceWithDiagnostics mnService;
 VLCB::CanServiceWithDiagnostics canService(&can2515);
 VLCB::NodeVariableService nvService;
-VLCB::ConsumeOwnEventsService coeService;
 VLCB::EventConsumerService ecService;
 VLCB::EventTeachingService etService;
 VLCB::EventProducerService epService;
+
+long lastButtonPressTime = 0; // in ms.
+byte possibleRoutes[NumEVs];
 
 //
 /// setup VLCB - runs once at power on from setup()
@@ -58,12 +62,12 @@ void setupVLCB()
 
   VLCB::setServices({
     &mnService, &ledUserInterface, &serialUserInterface, &canService, &nvService,
-    &ecService, &epService, &etService, &coeService});
+    &ecService, &epService, &etService});
 
   // set config layout parameters
-  VLCB::setNumNodeVariables(1);
+  VLCB::setNumNodeVariables(10);
   VLCB::setMaxEvents(32);
-  VLCB::setNumEventVariables(20);
+  VLCB::setNumEventVariables(NumEVs);
 
   // set module parameters
   VLCB::setVersion(VER_MAJ, VER_MIN, VER_BETA);
@@ -122,32 +126,102 @@ void loop()
   // bottom of loop()
 }
 
+bool isSubsequentButtonPress()
+{
+  // Check timer. Is this within the interval from the first button press?
+  byte buttonPressInterval = VLCB::readNV(1) * 100;
+  long now = millis();
+  return now < lastButtonPressTime + buttonPressInterval;
+}
+
+void saveLastButtonPressTime()
+{
+  lastButtonPressTime = millis();
+}
+
+void saveRoutesFromEvent(byte eventIndex)
+{
+  // Save routes for this event for next button press.
+  for (byte i = 0; i < NumEVs; i++)
+  {
+    possibleRoutes[i] = VLCB::getEventEVval(eventIndex, i + 1);
+  }
+}
+
+bool routeIsSaved(byte newRoute)
+{
+  for (byte j = 0; j < NumEVs; j++)
+  {
+    if (possibleRoutes[j] == newRoute)
+    {
+      return true;
+    }
+  }
+  return false;
+}
+
+byte findMatchingRoute(byte eventIndex)
+{
+  // Match route set with previous route set. (Intersection)
+  byte selectedRoute = 0;
+  byte routeCount = 0;
+  for (byte i = 0; i < NumEVs; i++)
+  {
+    byte newRoute = VLCB::getEventEVval(eventIndex, i + 1);
+    if (routeIsSaved(newRoute))
+    {
+      ++routeCount;
+      if (selectedRoute == 0)
+      {
+        selectedRoute = newRoute;
+      }
+    }
+  }
+  if (routeCount == 0)
+  {
+    Serial << F("> No possible routes found.") << endl;
+  }
+  else
+  {
+    if (routeCount >= 2)
+    {
+      Serial << F("> Found ") << routeCount << F(" possible routes") << endl; 
+    }
+  }
+  return selectedRoute;
+}
+
 //
 /// user-defined event processing function
 /// called from the VLCB library when a learned event is received
 /// it receives the event table index and the CAN frame
 //
-void eventhandler(byte index, const VLCB::VlcbMessage *msg)
+void eventhandler(byte eventIndex, const VLCB::VlcbMessage *msg)
 {
-  byte evval = VLCB::getEventEVval(index, 2);  //read ev2 because ev1 defines producer.
+  Serial << F("> event handler: index = ") << eventIndex << F(", opcode = 0x") << _HEX(msg->data[0]) << endl;
+
   // Event Off op-codes have odd numbers.
   bool ison = (msg->data[0] & 0x01) == 0;
+  if (!ison)
+  {
+    // Don't react to OFF events. Probably misconfiguration.
+    return;
+  }
+  
+  if (isSubsequentButtonPress())
+  {
+    Serial << F("> is subsequent button press") << endl;
+    // Subsequent button press: Collect possible route set for this button.
+    byte selectedRoute = findMatchingRoute(eventIndex);
 
-  Serial << F("> event handler: index = ") << index << F(", opcode = 0x") << _HEX(msg->data[0]) << endl;
-  Serial << F("> EV2 = ") << evval << endl;
+    Serial << F("> Selected route ") << selectedRoute << endl;
+    // Send an event with this node NN and the selectedRoute as EN. Cannot be taught.
+    VLCB::sendMessageWithNN(OPC_ACON, 0, selectedRoute);
+  }
 
-  
-  // TODO: Check timer. Is this the first button press?
-  
-  // TODO: First button press: Collect and save possible route set for this button as specified in EVs.
-  
-  // TODO: Subsequent button press: Collect possible route set for this button.
-  // TODO: Match route set with previous route set. (Intersection)
-  
-  // TODO: How many matches in intersected set?
-  // TODO: 0) Ignore button presses.
-  // TODO: 1) Send route event.
-  // TODO: >=2) Log diagnostic, print warning message. Choose first matching route.
+  saveRoutesFromEvent(eventIndex);
+  Serial << F("> saved routes from event for future button press.") << endl;
+  saveLastButtonPressTime();
 }
 
 //
