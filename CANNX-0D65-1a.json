@@ -1,0 +1,12 @@
+{
+  "moduleName": "CANNX",
+  "nodeVariables": [
+    {
+      "displayTitle": "Button press interval",
+      "type": "NodeVariableSlider",
+      "nodeVariableIndex": 1,
+      "displayUnits": "seconds",
+      "displayScale": 0.1
+    }
+  ]
+}
