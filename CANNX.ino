@@ -109,6 +109,12 @@ void setup()
 
   setupVLCB();
 
+  if (VLCB::readNV(1) == 255)
+  {
+    // Default value for button press interval is 5s.
+    VLCB::writeNV(1, 50);
+  }
+
   // end of setup
   Serial << F("> ready") << endl << endl;
 }
@@ -129,8 +135,10 @@ void loop()
 bool isSubsequentButtonPress()
 {
   // Check timer. Is this within the interval from the first button press?
-  byte buttonPressInterval = VLCB::readNV(1) * 100;
+  int buttonPressInterval = VLCB::readNV(1) * 100;
   long now = millis();
+  //Serial << F("Checking button sequence: lastTime=") << lastButtonPressTime
+  //  << F(", now=") << now << F(", interval=") << buttonPressInterval << endl;
   return now < lastButtonPressTime + buttonPressInterval;
 }
 
@@ -168,8 +176,10 @@ byte findMatchingRoute(byte eventIndex)
   for (byte i = 0; i < NumEVs; i++)
   {
     byte newRoute = VLCB::getEventEVval(eventIndex, i + 1);
-    if (routeIsSaved(newRoute))
+    //Serial << F("> > checking route ") << newRoute << endl;
+    if (newRoute != 0 && newRoute != 255 && routeIsSaved(newRoute))
     {
+      //Serial << F("> >   route ") << newRoute << F(" was saved") << endl;
       ++routeCount;
       if (selectedRoute == 0)
       {
@@ -214,9 +224,16 @@ void eventhandler(byte eventIndex, const VLCB::VlcbMessage *msg)
     // Subsequent button press: Collect possible route set for this button.
     byte selectedRoute = findMatchingRoute(eventIndex);
 
-    Serial << F("> Selected route ") << selectedRoute << endl;
-    // Send an event with this node NN and the selectedRoute as EN. Cannot be taught.
-    VLCB::sendMessageWithNN(OPC_ACON, 0, selectedRoute);
+    if (selectedRoute > 0)
+    {
+      Serial << F("> Selected route ") << selectedRoute << endl;
+      // Send an event with this node NN and the selectedRoute as EN. Cannot be taught.
+      VLCB::sendMessageWithNN(OPC_ACON, 0, selectedRoute);
+    }
+    else
+    {
+      Serial << F("> No route selected.") << endl;
+    }
   }
 
   saveRoutesFromEvent(eventIndex);
