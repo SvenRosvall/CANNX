@@ -1,4 +1,5 @@
 {
+  "timestamp": "202601122215",
   "moduleName": "CANNX",
   "nodeVariables": [
     {
@@ -7,6 +8,108 @@
       "nodeVariableIndex": 1,
       "displayUnits": "seconds",
       "displayScale": 0.1
+    }
+  ],
+  "eventVariables": [
+    {
+      "displayTitle": "1st route",
+      "type" : "EventVariableNumber",
+      "eventVariableIndex": 1
+    },
+    {
+      "displayTitle": "2nd route",
+      "type" : "EventVariableNumber",
+      "eventVariableIndex": 2
+    },
+    {
+      "displayTitle": "3rd route",
+      "type" : "EventVariableNumber",
+      "eventVariableIndex": 3
+    },
+    {
+      "displayTitle": "4th route",
+      "type" : "EventVariableNumber",
+      "eventVariableIndex": 4
+    },
+    {
+      "displayTitle": "5th route",
+      "type" : "EventVariableNumber",
+      "eventVariableIndex": 5
+    },
+    {
+      "displayTitle": "6th route",
+      "type" : "EventVariableNumber",
+      "eventVariableIndex": 6
+    },
+    {
+      "displayTitle": "7th route",
+      "type" : "EventVariableNumber",
+      "eventVariableIndex": 7
+    },
+    {
+      "displayTitle": "8th route",
+      "type" : "EventVariableNumber",
+      "eventVariableIndex": 8
+    },
+    {
+      "displayTitle": "9th route",
+      "type" : "EventVariableNumber",
+      "eventVariableIndex": 9
+    },
+    {
+      "displayTitle": "10th route",
+      "type" : "EventVariableNumber",
+      "eventVariableIndex": 10
+    },
+    {
+      "displayTitle": "11th route",
+      "type" : "EventVariableNumber",
+      "eventVariableIndex": 11
+    },
+    {
+      "displayTitle": "12th route",
+      "type" : "EventVariableNumber",
+      "eventVariableIndex": 12
+    },
+    {
+      "displayTitle": "13th route",
+      "type" : "EventVariableNumber",
+      "eventVariableIndex": 13
+    },
+    {
+      "displayTitle": "14th route",
+      "type" : "EventVariableNumber",
+      "eventVariableIndex": 14
+    },
+    {
+      "displayTitle": "15th route",
+      "type" : "EventVariableNumber",
+      "eventVariableIndex": 15
+    },
+    {
+      "displayTitle": "16th route",
+      "type" : "EventVariableNumber",
+      "eventVariableIndex": 16
+    },
+    {
+      "displayTitle": "17th route",
+      "type" : "EventVariableNumber",
+      "eventVariableIndex": 17
+    },
+    {
+      "displayTitle": "18th route",
+      "type" : "EventVariableNumber",
+      "eventVariableIndex": 18
+    },
+    {
+      "displayTitle": "19th route",
+      "type" : "EventVariableNumber",
+      "eventVariableIndex": 19
+    },
+    {
+      "displayTitle": "20th route",
+      "type" : "EventVariableNumber",
+      "eventVariableIndex": 20
     }
   ]
 }
